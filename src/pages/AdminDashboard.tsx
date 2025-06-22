@@ -21,6 +21,8 @@ const AdminDashboard = () => {
     const path = location.pathname;
     if (path === '/admin' || path === '/admin/overview') return 'overview';
     if (path === '/admin/interns') return 'interns';
+    if (path === '/admin/employees') return 'employees';
+    if (path === '/admin/banking') return 'banking';
     if (path === '/admin/scheduled-calls') return 'scheduled-calls';
     if (path === '/admin/contact-messages') return 'contact-messages';
     if (path === '/admin/jobs') return 'jobs';
@@ -77,7 +79,9 @@ const AdminDashboard = () => {
               timeLeft={timeLeft}
               formatTime={formatTime}
               extendSession={extendSession}
-              setShowWarning={setShowWarning}
+              setShowWar
+
+ning={setShowWarning}
               userRole={userRole}
             />
           </div>

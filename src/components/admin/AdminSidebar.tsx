@@ -1,22 +1,24 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  LayoutDashboard,
-  GraduationCap,
+  LayoutDashboard, 
+  Users, 
+  UserCheck, 
   Calendar, 
   MessageSquare, 
-  Briefcase,
-  DollarSign,
-  Headphones,
-  Trash2,
-  Shield,
+  Briefcase, 
+  DollarSign, 
+  HelpCircle, 
+  Trash2, 
+  Settings, 
   User,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -25,139 +27,128 @@ interface AdminSidebarProps {
   activeTab: string;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
-  isCollapsed, 
-  onToggle, 
-  activeTab 
-}) => {
-  const navigate = useNavigate();
-  const { data: stats } = useDashboardStats();
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ isCollapsed, onToggle, activeTab }) => {
+  const location = useLocation();
 
   const menuItems = [
     {
-      id: 'overview',
+      key: 'overview',
       label: 'Overview',
       icon: LayoutDashboard,
-      path: '/admin',
-      count: 0
+      href: '/admin/overview'
     },
     {
-      id: 'interns',
+      key: 'interns',
       label: 'Interns',
-      icon: GraduationCap,
-      path: '/admin/interns',
-      count: stats?.interns.pending || 0
+      icon: UserCheck,
+      href: '/admin/interns'
     },
     {
-      id: 'scheduled-calls',
+      key: 'employees',
+      label: 'Employees',
+      icon: Users,
+      href: '/admin/employees'
+    },
+    {
+      key: 'banking',
+      label: 'Banking Ledger',
+      icon: CreditCard,
+      href: '/admin/banking'
+    },
+    {
+      key: 'scheduled-calls',
       label: 'Scheduled Calls',
       icon: Calendar,
-      path: '/admin/scheduled-calls',
-      count: stats?.scheduledCalls.pending || 0
+      href: '/admin/scheduled-calls'
     },
     {
-      id: 'contact-messages',
+      key: 'contact-messages',
       label: 'Contact Messages',
       icon: MessageSquare,
-      path: '/admin/contact-messages',
-      count: 0
+      href: '/admin/contact-messages'
     },
     {
-      id: 'jobs',
+      key: 'jobs',
       label: 'Job Management',
       icon: Briefcase,
-      path: '/admin/jobs',
-      count: 0
+      href: '/admin/jobs'
     },
     {
-      id: 'salary',
+      key: 'salary',
       label: 'Salary Inquiries',
       icon: DollarSign,
-      path: '/admin/salary',
-      count: stats?.salaryInquiries.pending || 0
+      href: '/admin/salary'
     },
     {
-      id: 'support',
-      label: 'Support Tickets',
-      icon: Headphones,
-      path: '/admin/support',
-      count: stats?.supportTickets.pending || 0
+      key: 'support',
+      label: 'Technical Support',
+      icon: HelpCircle,
+      href: '/admin/support'
     },
     {
-      id: 'manage-admins',
-      label: 'Manage Admins',
-      icon: Shield,
-      path: '/admin/manage-admins',
-      count: 0
-    },
-    {
-      id: 'recycle-bin',
+      key: 'recycle-bin',
       label: 'Recycle Bin',
       icon: Trash2,
-      path: '/admin/recycle-bin',
-      count: 0
+      href: '/admin/recycle-bin'
     },
     {
-      id: 'profile',
+      key: 'manage-admins',
+      label: 'Manage Admins',
+      icon: Settings,
+      href: '/admin/manage-admins'
+    },
+    {
+      key: 'profile',
       label: 'Profile',
       icon: User,
-      path: '/admin/profile',
-      count: 0
+      href: '/admin/profile'
     }
   ];
 
   return (
-    <div className={`bg-white border-r border-border transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-64'
-    } flex-shrink-0`}>
-      <div className="p-4">
+    <div className={cn(
+      "fixed left-0 top-20 h-[calc(100vh-80px)] bg-card border-r transition-all duration-300 z-40",
+      isCollapsed ? "w-16" : "w-64"
+    )}>
+      <div className="flex items-center justify-between p-4 border-b">
+        {!isCollapsed && (
+          <h2 className="text-lg font-semibold">Admin Panel</h2>
+        )}
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggle}
-          className="w-full flex items-center justify-center"
+          className="ml-auto"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
-      
-      <nav className="px-2 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          
-          return (
-            <Button
-              key={item.id}
-              variant={isActive ? "default" : "ghost"}
-              onClick={() => navigate(item.path)}
-              className={`w-full justify-start h-12 ${
-                isCollapsed ? 'px-3' : 'px-4'
-              } ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {!isCollapsed && (
-                <>
-                  <span className="ml-3 truncate">{item.label}</span>
-                  {item.count > 0 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="ml-auto bg-orange-100 text-orange-800 text-xs"
-                    >
-                      {item.count}
-                    </Badge>
+
+      <ScrollArea className="flex-1 px-2 py-4">
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.key;
+            
+            return (
+              <Link key={item.key} to={item.href}>
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start",
+                    isCollapsed ? "px-2" : "px-4",
+                    isActive && "bg-primary/10 text-primary"
                   )}
-                </>
-              )}
-              {isCollapsed && item.count > 0 && (
-                <div className="absolute left-10 top-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {item.count}
-                </div>
-              )}
-            </Button>
-          );
-        })}
-      </nav>
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
+                  {!isCollapsed && <span>{item.label}</span>}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </ScrollArea>
     </div>
   );
 };

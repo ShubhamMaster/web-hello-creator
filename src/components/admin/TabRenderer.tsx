@@ -10,6 +10,8 @@ import TechnicalSupportTab from "./TechnicalSupportTab";
 import RecycleBinTab from "./RecycleBinTab";
 import ManageAdminsTab from "./ManageAdminsTab";
 import JobManagement from "../JobManagement";
+import EmployeesTab from "./EmployeesTab";
+import BankingTab from "./BankingTab";
 
 interface TabRendererProps {
   activeTab: string;
@@ -47,6 +49,10 @@ const TabRenderer: React.FC<TabRendererProps> = ({
       );
     case 'interns':
       return <InternsTab />;
+    case 'employees':
+      return <EmployeesTab />;
+    case 'banking':
+      return <BankingTab />;
     case 'scheduled-calls':
       return <ScheduledCallsTab />;
     case 'contact-messages':
