@@ -1,20 +1,16 @@
+
 import React from 'react';
 import './App.css';
-import LandingPage from './pages/LandingPage';
+import Index from './pages/Index';
 import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import Signup from './pages/Signup';
 import Contact from './pages/Contact';
-import About from './pages/About';
 import Services from './pages/Services';
-import NotFoundError from './pages/NotFoundError';
+import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import Internships from './pages/Internships';
-import Joblistings from './pages/Joblistings';
-import TermsAndConditions from './pages/TermsAndConditions';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import ScheduledCalls from './pages/ScheduledCalls';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -22,7 +18,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "@/components/ui/toaster";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminDashboard from "@/pages/AdminDashboard";
-import ApplicationForm from './pages/ApplicationForm';
 
 const queryClient = new QueryClient();
 
@@ -35,31 +30,16 @@ function App() {
             <div className="min-h-screen bg-background text-foreground">
               <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/internships" element={<Internships />} />
-                <Route path="/joblistings" element={<Joblistings />} />
-                <Route path="/terms" element={<TermsAndConditions />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
-                <Route path="*" element={<NotFoundError />} />
-                <Route path="/application-form/:jobId" element={<ApplicationForm />} />
-
-                {/* Protected routes - User */}
-                <Route 
-                  path="/scheduled-calls" 
-                  element={
-                    <ProtectedRoute>
-                      <ScheduledCalls />
-                    </ProtectedRoute>
-                  } 
-                />
+                <Route path="*" element={<NotFound />} />
                 
                 {/* Admin routes */}
                 <Route 
