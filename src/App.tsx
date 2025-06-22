@@ -7,7 +7,6 @@ import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import Services from './pages/Services';
 import NotFound from './pages/NotFound';
-import Unauthorized from './pages/Unauthorized';
 import Internships from './pages/Internships';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
@@ -38,7 +37,6 @@ function App() {
                 <Route path="/internships" element={<Internships />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
-                <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="*" element={<NotFound />} />
                 
                 {/* Admin routes */}
