@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useEmployees, Employee } from '@/hooks/useEmployees';
+import { useEmployees, Employee, EmployeeInsert } from '@/hooks/useEmployees';
 import { Search, Plus, Download, Edit, Trash2, Eye } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
@@ -23,11 +23,11 @@ const EmployeesTab = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Partial<Employee>>();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<EmployeeInsert>();
 
   const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Design'];
-  const employmentTypes = ['Full-Time', 'Part-Time', 'Contract'];
-  const workStatuses = ['Active', 'On Leave', 'Terminated'];
+  const employmentTypes = ['Full-Time', 'Part-Time', 'Contract'] as const;
+  const workStatuses = ['Active', 'On Leave', 'Terminated'] as const;
 
   const handleSearch = () => {
     fetchEmployees({ 
@@ -37,9 +37,9 @@ const EmployeesTab = () => {
     });
   };
 
-  const handleCreateEmployee = async (data: Partial<Employee>) => {
+  const handleCreateEmployee = async (data: EmployeeInsert) => {
     try {
-      await createEmployee(data as Omit<Employee, 'id' | 'employee_id' | 'created_at' | 'updated_at'>);
+      await createEmployee(data);
       setIsCreateDialogOpen(false);
       reset();
     } catch (error) {
@@ -47,7 +47,7 @@ const EmployeesTab = () => {
     }
   };
 
-  const handleEditEmployee = async (data: Partial<Employee>) => {
+  const handleEditEmployee = async (data: EmployeeInsert) => {
     if (!selectedEmployee) return;
     
     try {
@@ -64,7 +64,8 @@ const EmployeesTab = () => {
     setSelectedEmployee(employee);
     // Populate form with employee data
     Object.keys(employee).forEach(key => {
-      setValue(key as keyof Employee, employee[key as keyof Employee]);
+      const value = employee[key as keyof Employee];
+      setValue(key as keyof EmployeeInsert, value as any);
     });
     setIsEditDialogOpen(true);
   };
@@ -324,7 +325,6 @@ const EmployeesTab = () => {
             <DialogTitle>Edit Employee</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleEditEmployee)} className="space-y-4">
-            {/* Similar form structure as create, but with pre-filled values */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="full_name">Full Name *</Label>
@@ -334,7 +334,6 @@ const EmployeesTab = () => {
                 <Label htmlFor="email">Email *</Label>
                 <Input type="email" {...register('email', { required: 'Email is required' })} />
               </div>
-              {/* Add more fields as needed */}
             </div>
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>

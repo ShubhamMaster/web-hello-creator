@@ -2,23 +2,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 
-export interface Transaction {
-  id: string;
-  transaction_id: string;
-  date: string;
-  type: 'Credit' | 'Debit';
-  amount: number;
-  description: string;
-  purpose?: string;
-  payment_to_from?: string;
-  remaining_balance?: number;
-  status: 'Pending' | 'Cleared';
-  created_at: string;
-  updated_at: string;
-  is_deleted?: boolean;
-  deleted_at?: string;
-}
+// Use the actual database types
+export type Transaction = Database['public']['Tables']['transactions']['Row'];
+export type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
+export type TransactionUpdate = Database['public']['Tables']['transactions']['Update'];
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -77,7 +66,7 @@ export const useTransactions = () => {
     }
   };
 
-  const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>) => {
+  const createTransaction = async (transactionData: TransactionInsert) => {
     try {
       // Generate transaction ID
       const { data: transactionId, error: idError } = await supabase.rpc('generate_transaction_id');
@@ -113,7 +102,7 @@ export const useTransactions = () => {
     }
   };
 
-  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+  const updateTransaction = async (id: string, updates: TransactionUpdate) => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -152,13 +141,13 @@ export const useTransactions = () => {
 
       if (updateError) throw updateError;
 
-      // Add to recycle bin
+      // Add to recycle bin - convert Transaction to Json compatible format
       const { error: recycleBinError } = await supabase
         .from('recycle_bin')
         .insert({
           original_table: 'transactions',
           original_id: id,
-          data: transactionData,
+          data: transactionData as any,
           can_restore: true
         });
 
@@ -207,8 +196,8 @@ export const useTransactions = () => {
     const balance = transactions.reduce((total, transaction) => {
       if (transaction.status === 'Cleared') {
         return transaction.type === 'Credit' 
-          ? total + transaction.amount 
-          : total - transaction.amount;
+          ? total + Number(transaction.amount)
+          : total - Number(transaction.amount);
       }
       return total;
     }, 0);
