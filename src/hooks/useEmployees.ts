@@ -32,6 +32,8 @@ export interface Employee {
   notes?: string;
   created_at: string;
   updated_at: string;
+  is_deleted?: boolean;
+  deleted_at?: string;
 }
 
 export const useEmployees = () => {
@@ -80,12 +82,14 @@ export const useEmployees = () => {
     }
   };
 
-  const createEmployee = async (employeeData: Omit<Employee, 'id' | 'employee_id' | 'created_at' | 'updated_at'>) => {
+  const createEmployee = async (employeeData: Omit<Employee, 'id' | 'employee_id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>) => {
     try {
       // Generate employee ID
       const currentYear = new Date().getFullYear();
-      const { data: employeeId } = await supabase.rpc('generate_employee_id', { year: currentYear });
+      const { data: employeeId, error: idError } = await supabase.rpc('generate_employee_id', { year: currentYear });
       
+      if (idError) throw idError;
+
       const { data, error } = await supabase
         .from('employees')
         .insert([{

@@ -10,27 +10,18 @@ export interface Transaction {
   type: 'Credit' | 'Debit';
   amount: number;
   description: string;
-  purpose_tags?: string[];
+  purpose?: string;
   payment_to_from?: string;
-  department?: string;
+  remaining_balance?: number;
   status: 'Pending' | 'Cleared';
-  created_by?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface BalanceEntry {
-  transaction_id: string;
-  date: string;
-  type: string;
-  amount: number;
-  description: string;
-  running_balance: number;
+  is_deleted?: boolean;
+  deleted_at?: string;
 }
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [balanceEntries, setBalanceEntries] = useState<BalanceEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -86,28 +77,18 @@ export const useTransactions = () => {
     }
   };
 
-  const fetchBalanceEntries = async () => {
+  const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>) => {
     try {
-      const { data, error } = await supabase.rpc('calculate_running_balance');
-      if (error) throw error;
-      setBalanceEntries(data || []);
-    } catch (error) {
-      console.error('Error fetching balance entries:', error);
-      toast({
-        title: "Error",
-        description: "Failed to calculate running balance",
-        variant: "destructive",
-      });
-    }
-  };
+      // Generate transaction ID
+      const { data: transactionId, error: idError } = await supabase.rpc('generate_transaction_id');
+      
+      if (idError) throw idError;
 
-  const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at'>) => {
-    try {
       const { data, error } = await supabase
         .from('transactions')
         .insert([{
           ...transactionData,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          transaction_id: transactionId
         }])
         .select()
         .single();
@@ -120,7 +101,6 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
-      fetchBalanceEntries();
       return data;
     } catch (error) {
       console.error('Error creating transaction:', error);
@@ -148,7 +128,6 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
-      fetchBalanceEntries();
     } catch (error) {
       console.error('Error updating transaction:', error);
       toast({
@@ -191,7 +170,6 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
-      fetchBalanceEntries();
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast({
@@ -226,21 +204,25 @@ export const useTransactions = () => {
   };
 
   const getCurrentBalance = () => {
-    if (balanceEntries.length === 0) return 0;
-    return balanceEntries[0].running_balance;
+    const balance = transactions.reduce((total, transaction) => {
+      if (transaction.status === 'Cleared') {
+        return transaction.type === 'Credit' 
+          ? total + transaction.amount 
+          : total - transaction.amount;
+      }
+      return total;
+    }, 0);
+    return balance;
   };
 
   useEffect(() => {
     fetchTransactions();
-    fetchBalanceEntries();
   }, []);
 
   return {
     transactions,
-    balanceEntries,
     isLoading,
     fetchTransactions,
-    fetchBalanceEntries,
     createTransaction,
     updateTransaction,
     deleteTransaction,

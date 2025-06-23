@@ -16,7 +16,6 @@ import { useForm } from 'react-hook-form';
 const BankingTab = () => {
   const { 
     transactions, 
-    balanceEntries,
     isLoading, 
     createTransaction, 
     updateTransaction, 
@@ -37,9 +36,6 @@ const BankingTab = () => {
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Partial<Transaction>>();
 
-  const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Design', 'General'];
-  const purposeTags = ['salary', 'bonus', 'equipment', 'travel', 'training', 'marketing', 'utilities', 'rent', 'investment', 'miscellaneous'];
-
   const handleSearch = () => {
     fetchTransactions({ 
       search: searchTerm, 
@@ -55,9 +51,10 @@ const BankingTab = () => {
       const transactionData = {
         ...data,
         amount: Number(data.amount),
-        purpose_tags: data.purpose_tags || []
+        date: data.date || new Date().toISOString().split('T')[0],
+        status: data.status || 'Pending'
       };
-      await createTransaction(transactionData as Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at'>);
+      await createTransaction(transactionData as Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>);
       setIsCreateDialogOpen(false);
       reset();
     } catch (error) {
@@ -139,7 +136,7 @@ const BankingTab = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4"  />
                 Add Transaction
               </Button>
             </DialogTrigger>
@@ -195,17 +192,8 @@ const BankingTab = () => {
                     <Input {...register('payment_to_from')} />
                   </div>
                   <div>
-                    <Label htmlFor="department">Department</Label>
-                    <Select onValueChange={(value) => setValue('department', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map(dept => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="purpose">Purpose</Label>
+                    <Input {...register('purpose')} />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="description">Description *</Label>
