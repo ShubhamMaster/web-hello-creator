@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -23,31 +23,39 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
-      toast({ title: "Passwords do not match", variant: "destructive" });
+      toast({ 
+        title: "Passwords do not match", 
+        variant: "destructive" 
+      });
       return;
     }
+    
     setIsLoading(true);
-    // Supabase signup with email redirect
-    const { email, password } = formData;
-    const redirectUrl = `${window.location.origin}/login`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: { full_name: formData.name }
-      }
-    });
+    
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
     setIsLoading(false);
+    
     if (error) {
-      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+      console.error('Signup error:', error);
+      toast({ 
+        title: "Sign up failed", 
+        description: error.message || "Please try again", 
+        variant: "destructive" 
+      });
       return;
     }
-    toast({ title: "Account created! Check your email to confirm." });
+    
+    toast({ 
+      title: "Account created!", 
+      description: "Check your email to confirm your account." 
+    });
     navigate("/login");
   };
 
@@ -184,7 +192,6 @@ const Signup = () => {
             </CardContent>
           </Card>
         </main>
-        {/* Blank space at bottom before footer, only reveals footer after scroll */}
         <div className="h-24 md:h-40" />
       </div>
       <Footer />
@@ -193,4 +200,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
