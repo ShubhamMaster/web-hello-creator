@@ -10,9 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Trash2, RotateCcw, Search, AlertTriangle } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
-
-type RecycleBinItem = Database['public']['Tables']['recycle_bin']['Row'];
 
 const RecycleBinTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,7 +25,7 @@ const RecycleBinTab = () => {
         .order('deleted_at', { ascending: false });
       
       if (error) throw error;
-      return data as RecycleBinItem[];
+      return data;
     },
   });
 
@@ -42,8 +39,7 @@ const RecycleBinTab = () => {
       // Remove sensitive fields and restore the item
       const { id, created_at, updated_at, is_deleted, deleted_at, ...cleanData } = data;
       
-      // Use a type assertion to handle the dynamic table restoration
-      const { error: insertError } = await (supabase as any)
+      const { error: insertError } = await supabase
         .from(originalTable)
         .insert({
           ...cleanData,
@@ -121,8 +117,6 @@ const RecycleBinTab = () => {
 
   const getTableDisplayName = (tableName: string) => {
     const names: Record<string, string> = {
-      'employees': 'Employees',
-      'transactions': 'Transactions',
       'interns': 'Interns',
       'scheduled_calls': 'Scheduled Calls',
       'salary_inquiries': 'Salary Inquiries',

@@ -2,15 +2,35 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Database } from '@/integrations/supabase/types';
 
-// Use the actual database types
-export type Transaction = Database['public']['Tables']['transactions']['Row'];
-export type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
-export type TransactionUpdate = Database['public']['Tables']['transactions']['Update'];
+export interface Transaction {
+  id: string;
+  transaction_id: string;
+  date: string;
+  type: 'Credit' | 'Debit';
+  amount: number;
+  description: string;
+  purpose_tags?: string[];
+  payment_to_from?: string;
+  department?: string;
+  status: 'Pending' | 'Cleared';
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BalanceEntry {
+  transaction_id: string;
+  date: string;
+  type: string;
+  amount: number;
+  description: string;
+  running_balance: number;
+}
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [balanceEntries, setBalanceEntries] = useState<BalanceEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -66,18 +86,28 @@ export const useTransactions = () => {
     }
   };
 
-  const createTransaction = async (transactionData: TransactionInsert) => {
+  const fetchBalanceEntries = async () => {
     try {
-      // Generate transaction ID
-      const { data: transactionId, error: idError } = await supabase.rpc('generate_transaction_id');
-      
-      if (idError) throw idError;
+      const { data, error } = await supabase.rpc('calculate_running_balance');
+      if (error) throw error;
+      setBalanceEntries(data || []);
+    } catch (error) {
+      console.error('Error fetching balance entries:', error);
+      toast({
+        title: "Error",
+        description: "Failed to calculate running balance",
+        variant: "destructive",
+      });
+    }
+  };
 
+  const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at'>) => {
+    try {
       const { data, error } = await supabase
         .from('transactions')
         .insert([{
           ...transactionData,
-          transaction_id: transactionId
+          created_by: (await supabase.auth.getUser()).data.user?.id
         }])
         .select()
         .single();
@@ -90,6 +120,7 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
+      fetchBalanceEntries();
       return data;
     } catch (error) {
       console.error('Error creating transaction:', error);
@@ -102,7 +133,7 @@ export const useTransactions = () => {
     }
   };
 
-  const updateTransaction = async (id: string, updates: TransactionUpdate) => {
+  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -117,6 +148,7 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
+      fetchBalanceEntries();
     } catch (error) {
       console.error('Error updating transaction:', error);
       toast({
@@ -141,13 +173,13 @@ export const useTransactions = () => {
 
       if (updateError) throw updateError;
 
-      // Add to recycle bin - convert Transaction to Json compatible format
+      // Add to recycle bin
       const { error: recycleBinError } = await supabase
         .from('recycle_bin')
         .insert({
           original_table: 'transactions',
           original_id: id,
-          data: transactionData as any,
+          data: transactionData,
           can_restore: true
         });
 
@@ -159,6 +191,7 @@ export const useTransactions = () => {
       });
 
       fetchTransactions();
+      fetchBalanceEntries();
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast({
@@ -193,25 +226,21 @@ export const useTransactions = () => {
   };
 
   const getCurrentBalance = () => {
-    const balance = transactions.reduce((total, transaction) => {
-      if (transaction.status === 'Cleared') {
-        return transaction.type === 'Credit' 
-          ? total + Number(transaction.amount)
-          : total - Number(transaction.amount);
-      }
-      return total;
-    }, 0);
-    return balance;
+    if (balanceEntries.length === 0) return 0;
+    return balanceEntries[0].running_balance;
   };
 
   useEffect(() => {
     fetchTransactions();
+    fetchBalanceEntries();
   }, []);
 
   return {
     transactions,
+    balanceEntries,
     isLoading,
     fetchTransactions,
+    fetchBalanceEntries,
     createTransaction,
     updateTransaction,
     deleteTransaction,

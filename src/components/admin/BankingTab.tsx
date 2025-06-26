@@ -9,13 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useTransactions, Transaction, TransactionInsert } from '@/hooks/useTransactions';
+import { useTransactions, Transaction } from '@/hooks/useTransactions';
 import { Search, Plus, Download, Edit, Trash2, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 const BankingTab = () => {
   const { 
     transactions, 
+    balanceEntries,
     isLoading, 
     createTransaction, 
     updateTransaction, 
@@ -34,27 +35,29 @@ const BankingTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TransactionInsert>();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Partial<Transaction>>();
+
+  const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Design', 'General'];
+  const purposeTags = ['salary', 'bonus', 'equipment', 'travel', 'training', 'marketing', 'utilities', 'rent', 'investment', 'miscellaneous'];
 
   const handleSearch = () => {
     fetchTransactions({ 
       search: searchTerm, 
-      type: typeFilter as 'Credit' | 'Debit',
-      status: statusFilter as 'Pending' | 'Cleared',
+      type: typeFilter as any,
+      status: statusFilter as any,
       dateFrom: dateFromFilter,
       dateTo: dateToFilter
     });
   };
 
-  const handleCreateTransaction = async (data: TransactionInsert) => {
+  const handleCreateTransaction = async (data: Partial<Transaction>) => {
     try {
       const transactionData = {
         ...data,
-        amount: data.amount ? Number(data.amount) : 0,
-        date: data.date || new Date().toISOString().split('T')[0],
-        status: (data.status as 'Pending' | 'Cleared') || 'Pending'
+        amount: Number(data.amount),
+        purpose_tags: data.purpose_tags || []
       };
-      await createTransaction(transactionData);
+      await createTransaction(transactionData as Omit<Transaction, 'id' | 'transaction_id' | 'created_at' | 'updated_at'>);
       setIsCreateDialogOpen(false);
       reset();
     } catch (error) {
@@ -62,13 +65,13 @@ const BankingTab = () => {
     }
   };
 
-  const handleEditTransaction = async (data: TransactionInsert) => {
+  const handleEditTransaction = async (data: Partial<Transaction>) => {
     if (!selectedTransaction) return;
     
     try {
       const updates = {
         ...data,
-        amount: data.amount ? Number(data.amount) : selectedTransaction.amount
+        amount: Number(data.amount)
       };
       await updateTransaction(selectedTransaction.id, updates);
       setIsEditDialogOpen(false);
@@ -82,8 +85,7 @@ const BankingTab = () => {
   const openEditDialog = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     Object.keys(transaction).forEach(key => {
-      const value = transaction[key as keyof Transaction];
-      setValue(key as keyof TransactionInsert, value as any);
+      setValue(key as keyof Transaction, transaction[key as keyof Transaction]);
     });
     setIsEditDialogOpen(true);
   };
@@ -137,7 +139,7 @@ const BankingTab = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="mr-2 h-4 w-4"  />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Transaction
               </Button>
             </DialogTrigger>
@@ -149,7 +151,7 @@ const BankingTab = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="type">Transaction Type *</Label>
-                    <Select onValueChange={(value) => setValue('type', value as 'Credit' | 'Debit')}>
+                    <Select onValueChange={(value) => setValue('type', value as any)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -178,7 +180,7 @@ const BankingTab = () => {
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <Select onValueChange={(value) => setValue('status', value as 'Pending' | 'Cleared')}>
+                    <Select onValueChange={(value) => setValue('status', value as any)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -193,8 +195,17 @@ const BankingTab = () => {
                     <Input {...register('payment_to_from')} />
                   </div>
                   <div>
-                    <Label htmlFor="purpose">Purpose</Label>
-                    <Input {...register('purpose')} />
+                    <Label htmlFor="department">Department</Label>
+                    <Select onValueChange={(value) => setValue('department', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(dept => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="description">Description *</Label>
@@ -237,7 +248,7 @@ const BankingTab = () => {
               {formatCurrency(
                 transactions
                   .filter(t => t.type === 'Credit' && t.status === 'Cleared')
-                  .reduce((sum, t) => sum + Number(t.amount), 0)
+                  .reduce((sum, t) => sum + t.amount, 0)
               )}
             </div>
           </CardContent>
@@ -252,7 +263,7 @@ const BankingTab = () => {
               {formatCurrency(
                 transactions
                   .filter(t => t.type === 'Debit' && t.status === 'Cleared')
-                  .reduce((sum, t) => sum + Number(t.amount), 0)
+                  .reduce((sum, t) => sum + t.amount, 0)
               )}
             </div>
           </CardContent>
@@ -342,7 +353,7 @@ const BankingTab = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className={transaction.type === 'Credit' ? 'text-green-600' : 'text-red-600'}>
-                    {formatCurrency(Number(transaction.amount))}
+                    {formatCurrency(transaction.amount)}
                   </TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>
@@ -385,7 +396,7 @@ const BankingTab = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="type">Transaction Type *</Label>
-                <Select value={watch('type')} onValueChange={(value) => setValue('type', value as 'Credit' | 'Debit')}>
+                <Select value={watch('type')} onValueChange={(value) => setValue('type', value as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>

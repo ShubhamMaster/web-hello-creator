@@ -2,12 +2,37 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Database } from '@/integrations/supabase/types';
 
-// Use the actual database types
-export type Employee = Database['public']['Tables']['employees']['Row'];
-export type EmployeeInsert = Database['public']['Tables']['employees']['Insert'];
-export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
+export interface Employee {
+  id: string;
+  employee_id: string;
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  date_of_birth?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  role_designation: string;
+  department: string;
+  date_of_joining: string;
+  employment_type: 'Full-Time' | 'Part-Time' | 'Contract';
+  salary?: number;
+  address?: string;
+  emergency_contact?: string;
+  emergency_phone?: string;
+  education_certifications?: string;
+  work_status: 'Active' | 'On Leave' | 'Terminated';
+  resume_url?: string;
+  supervisor?: string;
+  profile_image_url?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  upi_id?: string;
+  date_of_exit?: string;
+  exit_reason?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -55,14 +80,12 @@ export const useEmployees = () => {
     }
   };
 
-  const createEmployee = async (employeeData: EmployeeInsert) => {
+  const createEmployee = async (employeeData: Omit<Employee, 'id' | 'employee_id' | 'created_at' | 'updated_at'>) => {
     try {
       // Generate employee ID
       const currentYear = new Date().getFullYear();
-      const { data: employeeId, error: idError } = await supabase.rpc('generate_employee_id', { year: currentYear });
+      const { data: employeeId } = await supabase.rpc('generate_employee_id', { year: currentYear });
       
-      if (idError) throw idError;
-
       const { data, error } = await supabase
         .from('employees')
         .insert([{
@@ -92,7 +115,7 @@ export const useEmployees = () => {
     }
   };
 
-  const updateEmployee = async (id: string, updates: EmployeeUpdate) => {
+  const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
       const { error } = await supabase
         .from('employees')
@@ -131,13 +154,13 @@ export const useEmployees = () => {
 
       if (updateError) throw updateError;
 
-      // Add to recycle bin - convert Employee to Json compatible format
+      // Add to recycle bin
       const { error: recycleBinError } = await supabase
         .from('recycle_bin')
         .insert({
           original_table: 'employees',
           original_id: id,
-          data: employeeData as any,
+          data: employeeData,
           can_restore: true
         });
 

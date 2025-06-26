@@ -134,105 +134,6 @@ export type Database = {
         }
         Relationships: []
       }
-      employees: {
-        Row: {
-          account_number: string | null
-          address: string | null
-          created_at: string | null
-          date_of_birth: string | null
-          date_of_exit: string | null
-          date_of_joining: string
-          deleted_at: string | null
-          department: string
-          education_certifications: string | null
-          email: string
-          emergency_contact: string | null
-          emergency_phone: string | null
-          employee_id: string
-          employment_type: string
-          exit_reason: string | null
-          full_name: string
-          gender: string | null
-          id: string
-          ifsc_code: string | null
-          is_deleted: boolean | null
-          notes: string | null
-          phone_number: string | null
-          profile_image_url: string | null
-          resume_url: string | null
-          role_designation: string
-          salary: number | null
-          supervisor: string | null
-          updated_at: string | null
-          upi_id: string | null
-          work_status: string
-        }
-        Insert: {
-          account_number?: string | null
-          address?: string | null
-          created_at?: string | null
-          date_of_birth?: string | null
-          date_of_exit?: string | null
-          date_of_joining: string
-          deleted_at?: string | null
-          department: string
-          education_certifications?: string | null
-          email: string
-          emergency_contact?: string | null
-          emergency_phone?: string | null
-          employee_id: string
-          employment_type: string
-          exit_reason?: string | null
-          full_name: string
-          gender?: string | null
-          id?: string
-          ifsc_code?: string | null
-          is_deleted?: boolean | null
-          notes?: string | null
-          phone_number?: string | null
-          profile_image_url?: string | null
-          resume_url?: string | null
-          role_designation: string
-          salary?: number | null
-          supervisor?: string | null
-          updated_at?: string | null
-          upi_id?: string | null
-          work_status?: string
-        }
-        Update: {
-          account_number?: string | null
-          address?: string | null
-          created_at?: string | null
-          date_of_birth?: string | null
-          date_of_exit?: string | null
-          date_of_joining?: string
-          deleted_at?: string | null
-          department?: string
-          education_certifications?: string | null
-          email?: string
-          emergency_contact?: string | null
-          emergency_phone?: string | null
-          employee_id?: string
-          employment_type?: string
-          exit_reason?: string | null
-          full_name?: string
-          gender?: string | null
-          id?: string
-          ifsc_code?: string | null
-          is_deleted?: boolean | null
-          notes?: string | null
-          phone_number?: string | null
-          profile_image_url?: string | null
-          resume_url?: string | null
-          role_designation?: string
-          salary?: number | null
-          supervisor?: string | null
-          updated_at?: string | null
-          upi_id?: string | null
-          work_status?: string
-        }
-        Relationships: []
-      }
       interns: {
         Row: {
           created_at: string
@@ -566,57 +467,6 @@ export type Database = {
         }
         Relationships: []
       }
-      transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          date: string
-          deleted_at: string | null
-          description: string
-          id: string
-          is_deleted: boolean | null
-          payment_to_from: string | null
-          purpose: string | null
-          remaining_balance: number | null
-          status: string
-          transaction_id: string
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          date: string
-          deleted_at?: string | null
-          description: string
-          id?: string
-          is_deleted?: boolean | null
-          payment_to_from?: string | null
-          purpose?: string | null
-          remaining_balance?: number | null
-          status?: string
-          transaction_id: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          date?: string
-          deleted_at?: string | null
-          description?: string
-          id?: string
-          is_deleted?: boolean | null
-          payment_to_from?: string | null
-          purpose?: string | null
-          remaining_balance?: number | null
-          status?: string
-          transaction_id?: string
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       website_content: {
         Row: {
           content: Json
@@ -691,16 +541,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_employee_id: {
-        Args: { year: number }
-        Returns: string
-      }
       generate_intern_id: {
         Args: { year: number }
-        Returns: string
-      }
-      generate_transaction_id: {
-        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_user_role: {
